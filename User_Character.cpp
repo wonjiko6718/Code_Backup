@@ -204,27 +204,34 @@ void AUser_Character::NotifyHit
 {
 	//UE_LOG(LogTemp, Error, TEXT("Notify Hit Location : %s"), *(HitLocation-GetActorLocation()).ToString());
 	float degree = Cal_Forward_Target_Degree(HitLocation);
-	if (Other->ActorHasTag(TEXT("Wall")) && GetCharacterMovement()->IsFalling())
+	if (Other->ActorHasTag(TEXT("Wall")) && GetCharacterMovement()->IsFalling() &&WallTouch == false)
 	{	
 		WallTouch = true;
 		UE_LOG(LogTemp, Error, TEXT("Wall Dir By Character : %f"), degree);
-		SetActorRotation((FRotator(0.0f, (-90 - degree), 0.0f)));
+		GetController()->SetIgnoreMoveInput(true);
+		//SetActorRotation((FRotator(0.0f, (-90 - degree), 0.0f)));
 		//AddActorLocalRotation((FRotator(0.0f, (90-degree), 0.0f)));
 		if (degree > 1.0f)
 		{
+			if (degree > 90.0f)
+			{
+				degree -= -(90 - degree);
+			}
 			UE_LOG(LogTemp, Error, TEXT("Wall On Right"));
 			User_Character_AnimInstance->PlayWallRun_R_Montage();
-			//AddActorLocalRotation((FRotator(0.0f, -(90-degree), 0.0f)));
+			AddActorLocalRotation((FRotator(0.0f, -(90-degree), 0.0f)));
 			//SetActorRotation((FRotator(0.0f, -(90 - degree), 0.0f)));
-			GetController()->SetIgnoreMoveInput(true);
 		}
 		else if (degree < -1.0f)
 		{
+			if (degree < -90.0f)
+			{
+				degree -= -(-90 - degree);
+			}
 			UE_LOG(LogTemp, Error, TEXT("Wall On Left"));
 			User_Character_AnimInstance->PlayWallRun_L_Montage();
-			//AddActorLocalRotation((FRotator(0.0f, -(-90-degree), 0.0f)));
+			AddActorLocalRotation((FRotator(0.0f, -(-90-degree), 0.0f)));
 			//SetActorRotation((FRotator(0.0f, -(-90 - degree), 0.0f)));
-			GetController()->SetIgnoreMoveInput(true);
 
 		}
 		else
