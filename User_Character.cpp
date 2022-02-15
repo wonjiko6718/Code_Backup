@@ -72,6 +72,7 @@ void AUser_Character::PostInitializeComponents()
 void AUser_Character::BeginPlay()
 {
 	Super::BeginPlay();
+
 	
 }
 
@@ -94,15 +95,18 @@ void AUser_Character::Tick(float DeltaTime)
 void AUser_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
-
+	/*
 	PlayerInputComponent->BindAxis(TEXT("UpDown"), this, &AUser_Character::UpDown);
 	PlayerInputComponent->BindAxis(TEXT("LeftRight"), this, &AUser_Character::LeftRight);
 	PlayerInputComponent->BindAxis(TEXT("LookUp"), this, &AUser_Character::LookUp);
 	PlayerInputComponent->BindAxis(TEXT("Turn"), this, &AUser_Character::Turn);
+	*/
+
 	PlayerInputComponent->BindAxis(TEXT("CamDis"), this, &AUser_Character::Cam_Dis);
 	PlayerInputComponent->BindAction(TEXT("Jump"), EInputEvent::IE_Pressed, this, &AUser_Character::User_Jump);
 
 }
+/*
 void AUser_Character::UpDown(float NewAxisValue)
 {
 	FVector PlayerDir = FRotationMatrix(GetControlRotation()).GetUnitAxis(EAxis::X);
@@ -125,6 +129,7 @@ void AUser_Character::Turn(float NewAxisValue)
 {
 	AddControllerYawInput(NewAxisValue);
 }
+*/
 void AUser_Character::Cam_Dis(float NewAxisValue)
 {
 	if (SpringArm->TargetArmLength <= 520.0f && SpringArm->TargetArmLength >= 220.0f)

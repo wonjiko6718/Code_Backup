@@ -68,10 +68,12 @@ public:
 
 
 private:
+	/*
 	void UpDown(float NewAxisValue);
 	void LeftRight(float NewAxisValue);
 	void LookUp(float NewAxisValue);
 	void Turn(float NewAxisValue);
+	*/
 	void Cam_Dis(float NewAxisValue);
 	void User_Jump();
 	float Cal_Forward_Target_Degree(FVector TargetLocation);
