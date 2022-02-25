@@ -25,7 +25,6 @@ public:
 	// Called PostInitailize Components Method for Montage or Setting AnimInstance
 	virtual void PostInitializeComponents() override;
 	// Called to bind functionality to input
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	// add Override Methods
 	
 	//Add Notify Method
@@ -68,14 +67,6 @@ public:
 
 
 private:
-	/*
-	void UpDown(float NewAxisValue);
-	void LeftRight(float NewAxisValue);
-	void LookUp(float NewAxisValue);
-	void Turn(float NewAxisValue);
-	*/
-	void Cam_Dis(float NewAxisValue);
-	void User_Jump();
 	float Cal_Forward_Target_Degree(FVector TargetLocation);
 
 	UFUNCTION()

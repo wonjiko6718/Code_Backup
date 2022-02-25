@@ -24,6 +24,8 @@ public:
 	void LeftRight(float NewAxisValue);
 	void LookUp(float NewAxisValue);
 	void Turn(float NewAxisValue);
+	void User_Jump();
+	void User_Aiming();
 
 	UPROPERTY(VisibleAnywhere)
 		float PlayerSpeed;

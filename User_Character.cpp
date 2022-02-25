@@ -4,6 +4,7 @@
 #include "User_Character.h"
 #include "User_Character_AnimInstance.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "DrawDebugHelpers.h"
 // Sets default values
 AUser_Character::AUser_Character()
 {
@@ -89,75 +90,40 @@ void AUser_Character::Tick(float DeltaTime)
 	{
 		GetController()->ResetIgnoreMoveInput();
 	}
-}
+	//TraceCode
+	FHitResult OutHit;
+	FVector LT_Start_Vec = GetActorLocation();
+	FVector LT_End_Vec = GetActorUpVector() * 50.0f;
+	FCollisionQueryParams CollisionParams(NAME_None,false,this);
+	GetWorld()->SweepSingleByChannel(OutHit, LT_Start_Vec, LT_End_Vec, FQuat::Identity, ECollisionChannel::ECC_EngineTraceChannel2, FCollisionShape::MakeSphere(50.0f), CollisionParams);
+	DrawDebugCapsule(GetWorld(), LT_Start_Vec+LT_End_Vec*0.5f,100.0f*0.5f+50.0,50.0f,FRotationMatrix::MakeFromZ(LT_End_Vec).ToQuat(),OutHit.bBlockingHit? FColor::Green : FColor::Red,false,0.1f);
+	//If You Need Debug Drawing, Delete Slash Lines of UnderLine
+	if (OutHit.bBlockingHit && WallTouch == true)
+	{
+		float degree = Cal_Forward_Target_Degree(OutHit.ImpactPoint);
+		UE_LOG(LogTemp, Warning, TEXT("Lay_Trace:HittingActor Location : %f"), degree);
+		if (degree > 1.0f)
+		{
+			if (degree > 90.0f)
+			{
+				degree = 90.0f;
+			}
+			UE_LOG(LogTemp, Error, TEXT("Wall On Right"));
+			AddActorLocalRotation((FRotator(0.0f, -(90 - degree), 0.0f)));
+			//SetActorRotation((FRotator(0.0f, -(90 - degree), 0.0f)));
+		}
+		else if (degree < -1.0f)
+		{
+			if (degree < -90.0f)
+			{
+				degree = -90.0f;
+			}
+			UE_LOG(LogTemp, Error, TEXT("Wall On Left"));
+			AddActorLocalRotation((FRotator(0.0f, -(-90 - degree), 0.0f)));
+			//SetActorRotation((FRotator(0.0f, -(-90 - degree), 0.0f)));
 
-// Called to bind functionality to input
-void AUser_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
-{
-	Super::SetupPlayerInputComponent(PlayerInputComponent);
-	/*
-	PlayerInputComponent->BindAxis(TEXT("UpDown"), this, &AUser_Character::UpDown);
-	PlayerInputComponent->BindAxis(TEXT("LeftRight"), this, &AUser_Character::LeftRight);
-	PlayerInputComponent->BindAxis(TEXT("LookUp"), this, &AUser_Character::LookUp);
-	PlayerInputComponent->BindAxis(TEXT("Turn"), this, &AUser_Character::Turn);
-	*/
+		}
 
-	PlayerInputComponent->BindAxis(TEXT("CamDis"), this, &AUser_Character::Cam_Dis);
-	PlayerInputComponent->BindAction(TEXT("Jump"), EInputEvent::IE_Pressed, this, &AUser_Character::User_Jump);
-
-}
-/*
-void AUser_Character::UpDown(float NewAxisValue)
-{
-	FVector PlayerDir = FRotationMatrix(GetControlRotation()).GetUnitAxis(EAxis::X);
-	PlayerDir.Z = 0.0f;
-	PlayerDir.Normalize();
-	AddMovementInput(PlayerDir, NewAxisValue * PlayerSpeed);
-}
-void AUser_Character::LeftRight(float NewAxisValue)
-{
-	FVector PlayerDir = FRotationMatrix(GetControlRotation()).GetUnitAxis(EAxis::Y);
-	PlayerDir.Z = 0.0f;
-	PlayerDir.Normalize();
-	AddMovementInput(PlayerDir, NewAxisValue * PlayerSpeed);
-}
-void AUser_Character::LookUp(float NewAxisValue)
-{
-	AddControllerPitchInput(NewAxisValue);
-}
-void AUser_Character::Turn(float NewAxisValue)
-{
-	AddControllerYawInput(NewAxisValue);
-}
-*/
-void AUser_Character::Cam_Dis(float NewAxisValue)
-{
-	if (SpringArm->TargetArmLength <= 520.0f && SpringArm->TargetArmLength >= 220.0f)
-	{
-		SpringArm->TargetArmLength += NewAxisValue;
-	}
-	else if (SpringArm->TargetArmLength > 520.0f)
-	{
-		SpringArm->TargetArmLength = 520.0f;
-	}
-	else if (SpringArm->TargetArmLength < 220.0f)
-	{
-		SpringArm->TargetArmLength = 220.0f;
-	}
-}
-void AUser_Character::User_Jump()
-{
-	if (GetCharacterMovement()->IsFalling() == false) //On Grounded - Normal Jump
-	{
-		LaunchCharacter(FVector(0.0f, 0.0f, 800.0f), false, false);
-	}
-	else if (Air_Dash_Now == false && WallTouch == false)// Eccelerate
-	{
-		GetCharacterMovement()->StopMovementImmediately();
-		User_Character_AnimInstance->PlayAirDashMontage();
-		LaunchCharacter((GetActorForwardVector() + FVector(0.0f, 0.0f, 0.5f)) * 1500.0f, false, false);
-		Air_Dash_Now = true;
-		GetController()->SetIgnoreMoveInput(true);
 	}
 }
 void AUser_Character::End_Montage_Trail(UAnimMontage* Montage, bool bInterrupted)
@@ -167,9 +133,6 @@ void AUser_Character::End_Montage_Trail(UAnimMontage* Montage, bool bInterrupted
 void AUser_Character::NotifyActorBeginOverlap(AActor* Other)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Actor Overlap Acting : %s"), *Other->GetName());
-	// if You Interrupt Something, Stop AirDash
-	User_Character_AnimInstance->StopAirDashMontage();
-	Air_Dash_Now = false;
 	if (Other->ActorHasTag("Floor")) // Floor Overlap Setting, OnGrounded
 	{
 		User_Character_AnimInstance->StopAllMontages(0.35f);
@@ -178,6 +141,7 @@ void AUser_Character::NotifyActorBeginOverlap(AActor* Other)
 	if (Other->ActorHasTag("Wall") && GetCharacterMovement()->IsFalling()) // Wall Launch Details
 	{
 		GetCharacterMovement()->GravityScale = 0.5f;
+		GetCharacterMovement()->StopMovementImmediately();
 		LaunchCharacter((GetActorForwardVector() + FVector(0.0f, 0.0f, 0.2f)) * 500.0f, false, false);
 
 	}
@@ -220,32 +184,28 @@ void AUser_Character::NotifyHit
 		{
 			if (degree > 90.0f)
 			{
-				degree -= -(90 - degree);
+				degree = 90.0f;
 			}
 			UE_LOG(LogTemp, Error, TEXT("Wall On Right"));
 			User_Character_AnimInstance->PlayWallRun_R_Montage();
-			AddActorLocalRotation((FRotator(0.0f, -(90-degree), 0.0f)));
 			//SetActorRotation((FRotator(0.0f, -(90 - degree), 0.0f)));
 		}
 		else if (degree < -1.0f)
 		{
 			if (degree < -90.0f)
 			{
-				degree -= -(-90 - degree);
+				degree = -90.0f;
 			}
 			UE_LOG(LogTemp, Error, TEXT("Wall On Left"));
 			User_Character_AnimInstance->PlayWallRun_L_Montage();
-			AddActorLocalRotation((FRotator(0.0f, -(-90-degree), 0.0f)));
 			//SetActorRotation((FRotator(0.0f, -(-90 - degree), 0.0f)));
 
 		}
-		else
-		{
-			UE_LOG(LogTemp, Error, TEXT("Wall On Forward"));
-		}
 	}
-
-
+	if (Other->ActorHasTag(TEXT("Floor")))
+	{
+		WallTouch = false;
+	}
 }
 float AUser_Character::Cal_Forward_Target_Degree(FVector TargetLocation)
 {

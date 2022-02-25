@@ -22,7 +22,11 @@ void AUser_Player_Controller::BeginPlay() // BeginPlay
 	Super::BeginPlay();
 	User_Pawn_Character = Cast<ACharacter>(GetPawn());
 	UE_LOG(LogTemp, Error, TEXT("User_Player_Controller Posses : %s"), *User_Pawn_Character->GetName());
-
+	if (GetWorld()->GetName() == TEXT("MainMenu"))
+	{
+		SetInputMode(FInputModeUIOnly());
+		bShowMouseCursor = true;
+	}
 }
 void AUser_Player_Controller::SetupInputComponent() // SetupInput
 {
@@ -31,8 +35,7 @@ void AUser_Player_Controller::SetupInputComponent() // SetupInput
 	InputComponent->BindAxis(TEXT("LeftRight"), this, &AUser_Player_Controller::LeftRight);
 	InputComponent->BindAxis(TEXT("LookUp"), this, &AUser_Player_Controller::LookUp);
 	InputComponent->BindAxis(TEXT("Turn"), this, &AUser_Player_Controller::Turn);
-
-
+	InputComponent->BindAction(TEXT("Jump"), EInputEvent::IE_Pressed, this, &AUser_Player_Controller::User_Jump);
 }
 void AUser_Player_Controller::UpDown(float NewAxisValue)
 {
@@ -56,4 +59,12 @@ void AUser_Player_Controller::Turn(float NewAxisValue)
 {
 	User_Pawn_Character->AddControllerYawInput(NewAxisValue);
 
+}
+void AUser_Player_Controller::User_Jump()
+{
+	if (User_Pawn_Character->GetCharacterMovement()->IsFalling() == false) //On Grounded - Normal Jump
+	{
+		User_Pawn_Character->LaunchCharacter(FVector(0.0f, 0.0f, 800.0f), false, false);
+	}
+	
 }
