@@ -4,6 +4,7 @@
 
 #include "EngineMinimal.h"
 #include "GameFramework/PlayerController.h"
+#include "User_Character.h"
 #include "User_Player_Controller.generated.h"
 
 /**
@@ -25,12 +26,13 @@ public:
 	void LookUp(float NewAxisValue);
 	void Turn(float NewAxisValue);
 	void User_Jump();
-	void User_Aiming();
+	void User_Aiming_Press();
+	void User_Aiming_Release();
 
 	UPROPERTY(VisibleAnywhere)
 		float PlayerSpeed;
 private:
 	UPROPERTY(VisibleAnywhere)
-		ACharacter* User_Pawn_Character;
+		AUser_Character* User_Pawn_Character;
 		
 };

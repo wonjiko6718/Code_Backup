@@ -2,7 +2,6 @@
 
 
 #include "User_Player_Controller.h"
-#include "User_Character.h"
 
 AUser_Player_Controller::AUser_Player_Controller() // Constructor
 {
@@ -20,7 +19,7 @@ void AUser_Player_Controller::PostInitializeComponents()
 void AUser_Player_Controller::BeginPlay() // BeginPlay
 {
 	Super::BeginPlay();
-	User_Pawn_Character = Cast<ACharacter>(GetPawn());
+	User_Pawn_Character = Cast<AUser_Character>(GetPawn());
 	UE_LOG(LogTemp, Error, TEXT("User_Player_Controller Posses : %s"), *User_Pawn_Character->GetName());
 	if (GetWorld()->GetName() == TEXT("MainMenu"))
 	{
@@ -36,6 +35,10 @@ void AUser_Player_Controller::SetupInputComponent() // SetupInput
 	InputComponent->BindAxis(TEXT("LookUp"), this, &AUser_Player_Controller::LookUp);
 	InputComponent->BindAxis(TEXT("Turn"), this, &AUser_Player_Controller::Turn);
 	InputComponent->BindAction(TEXT("Jump"), EInputEvent::IE_Pressed, this, &AUser_Player_Controller::User_Jump);
+	InputComponent->BindAction(TEXT("Aimming"), EInputEvent::IE_Pressed, this, &AUser_Player_Controller::User_Aiming_Press);
+	InputComponent->BindAction(TEXT("Aimming"), EInputEvent::IE_Released, this, &AUser_Player_Controller::User_Aiming_Release);
+
+
 }
 void AUser_Player_Controller::UpDown(float NewAxisValue)
 {
@@ -67,4 +70,14 @@ void AUser_Player_Controller::User_Jump()
 		User_Pawn_Character->LaunchCharacter(FVector(0.0f, 0.0f, 800.0f), false, false);
 	}
 	
+}
+void AUser_Player_Controller::User_Aiming_Press()
+{
+	User_Pawn_Character->bUseControllerRotationYaw = true;
+	User_Pawn_Character->Camera->SetRelativeLocation(FVector(290.0f,30.0f,75.0f));
+}
+void AUser_Player_Controller::User_Aiming_Release()
+{
+	User_Pawn_Character->bUseControllerRotationYaw = false;
+	User_Pawn_Character->Camera->SetRelativeLocation(FVector(0.0f, 0.0f, 0.0f));
 }
