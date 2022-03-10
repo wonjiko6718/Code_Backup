@@ -5,12 +5,13 @@
 
 AUser_Player_Controller::AUser_Player_Controller() // Constructor
 {
+	PrimaryActorTick.bCanEverTick = true;
 	// Possess to Pawn
 	AController::Possess(GetPawn());
 
 	//Properties Setting
 	PlayerSpeed = 1.0f;
-
+	Player_Aim_Now = false;
 }
 void AUser_Player_Controller::PostInitializeComponents()
 {
@@ -26,6 +27,11 @@ void AUser_Player_Controller::BeginPlay() // BeginPlay
 		SetInputMode(FInputModeUIOnly());
 		bShowMouseCursor = true;
 	}
+}
+void AUser_Player_Controller::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+	User_Aiming_Function(DeltaTime);
 }
 void AUser_Player_Controller::SetupInputComponent() // SetupInput
 {
@@ -69,15 +75,42 @@ void AUser_Player_Controller::User_Jump()
 	{
 		User_Pawn_Character->LaunchCharacter(FVector(0.0f, 0.0f, 800.0f), false, false);
 	}
+	if (User_Pawn_Character->WallDir == 1 && User_Pawn_Character->WallTouch == true) // Right Wall Dir Jump
+	{
+		User_Pawn_Character->LaunchCharacter(GetPawn()->GetActorRightVector() * -500.0f + FVector(0.0f,0.0f,800.0f), false, false);
+		User_Pawn_Character->AddActorLocalRotation(FRotator(0.0f, -75.0f, 0.0f));
+	}
+	if (User_Pawn_Character->WallDir == -1 && User_Pawn_Character->WallTouch == true) // Left Wall Dir Jump
+	{
+		User_Pawn_Character->LaunchCharacter(GetPawn()->GetActorRightVector() * 500.0f + FVector(0.0f, 0.0f, 800.0f), false, false);
+		User_Pawn_Character->AddActorLocalRotation(FRotator(0.0f, 75.0f, 0.0f));
+
+	}
+	if (User_Pawn_Character->GetCharacterMovement()->IsFalling() == true && User_Pawn_Character->WallTouch == false)
+	{
+		User_Pawn_Character->LaunchCharacter(GetPawn()->GetActorUpVector() * -8000.0f,false,false);
+	}
 	
 }
 void AUser_Player_Controller::User_Aiming_Press()
 {
-	User_Pawn_Character->bUseControllerRotationYaw = true;
-	User_Pawn_Character->Camera->SetRelativeLocation(FVector(290.0f,30.0f,75.0f));
+	UE_LOG(LogTemp, Error, TEXT("User_Player_Pressed"));
+	Player_Aim_Now = true;
 }
 void AUser_Player_Controller::User_Aiming_Release()
 {
-	User_Pawn_Character->bUseControllerRotationYaw = false;
-	User_Pawn_Character->Camera->SetRelativeLocation(FVector(0.0f, 0.0f, 0.0f));
+	Player_Aim_Now = false;
+}
+void AUser_Player_Controller::User_Aiming_Function(float DeltaTime)
+{
+	if (Player_Aim_Now)
+	{
+		User_Pawn_Character->SpringArm->TargetArmLength = FMath::FInterpTo(User_Pawn_Character->SpringArm->TargetArmLength,150.0f,DeltaTime,10.0f);
+		User_Pawn_Character->Camera->SetRelativeLocation(FMath::VInterpTo(User_Pawn_Character->Camera->GetRelativeLocation(), FVector(0.0f, 50.0f, 50.0f),DeltaTime,10.0f));
+	}
+	else
+	{
+		User_Pawn_Character->SpringArm->TargetArmLength = FMath::FInterpTo(User_Pawn_Character->SpringArm->TargetArmLength, 400.0f, DeltaTime, 5.0f);
+		User_Pawn_Character->Camera->SetRelativeLocation(FMath::VInterpTo(User_Pawn_Character->Camera->GetRelativeLocation(), FVector(0.0f, 0.0f, 0.0f), DeltaTime, 10.0f));
+	}
 }

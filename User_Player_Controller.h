@@ -18,6 +18,7 @@ class CODE_SAMPLE_API AUser_Player_Controller : public APlayerController
 public:
 	AUser_Player_Controller();
 	virtual void BeginPlay() override;
+	virtual void Tick(float DeltaTime) override;
 	virtual void PostInitializeComponents() override;
 	virtual void SetupInputComponent() override;
 
@@ -28,9 +29,13 @@ public:
 	void User_Jump();
 	void User_Aiming_Press();
 	void User_Aiming_Release();
+	void User_Aiming_Function(float DeltaTime);
 
 	UPROPERTY(VisibleAnywhere)
 		float PlayerSpeed;
+	UPROPERTY(VisibleAnywhere)
+		bool Player_Aim_Now;
+
 private:
 	UPROPERTY(VisibleAnywhere)
 		AUser_Character* User_Pawn_Character;

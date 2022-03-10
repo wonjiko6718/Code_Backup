@@ -96,19 +96,20 @@ void AUser_Character::Tick(float DeltaTime)
 	FVector LT_End_Vec = GetActorUpVector() * 50.0f;
 	FCollisionQueryParams CollisionParams(NAME_None,false,this);
 	GetWorld()->SweepSingleByChannel(OutHit, LT_Start_Vec, LT_End_Vec, FQuat::Identity, ECollisionChannel::ECC_EngineTraceChannel2, FCollisionShape::MakeSphere(50.0f), CollisionParams);
-	DrawDebugCapsule(GetWorld(), LT_Start_Vec+LT_End_Vec*0.5f,100.0f*0.5f+50.0,50.0f,FRotationMatrix::MakeFromZ(LT_End_Vec).ToQuat(),OutHit.bBlockingHit? FColor::Green : FColor::Red,false,0.1f);
+	//DrawDebugCapsule(GetWorld(), LT_Start_Vec+LT_End_Vec*0.5f,100.0f*0.5f+50.0,50.0f,FRotationMatrix::MakeFromZ(LT_End_Vec).ToQuat(),OutHit.bBlockingHit? FColor::Green : FColor::Red,false,0.1f);
 	//If You Need Debug Drawing, Delete Slash Lines of UnderLine
 	if (OutHit.bBlockingHit && WallTouch == true)
 	{
 		float degree = Cal_Forward_Target_Degree(OutHit.ImpactPoint);
-		UE_LOG(LogTemp, Warning, TEXT("Lay_Trace:HittingActor Location : %f"), degree);
+		GetCharacterMovement()->Velocity = FVector(GetActorForwardVector() * 800.0f);
+		//UE_LOG(LogTemp, Warning, TEXT("Lay_Trace:HittingActor Location : %f"), degree);
 		if (degree > 1.0f)
 		{
 			if (degree > 90.0f)
 			{
 				degree = 90.0f;
 			}
-			UE_LOG(LogTemp, Error, TEXT("Wall On Right"));
+			//UE_LOG(LogTemp, Error, TEXT("Wall On Right"));
 			AddActorLocalRotation((FRotator(0.0f, -(90 - degree), 0.0f)));
 			//SetActorRotation((FRotator(0.0f, -(90 - degree), 0.0f)));
 		}
@@ -118,7 +119,7 @@ void AUser_Character::Tick(float DeltaTime)
 			{
 				degree = -90.0f;
 			}
-			UE_LOG(LogTemp, Error, TEXT("Wall On Left"));
+			//UE_LOG(LogTemp, Error, TEXT("Wall On Left"));
 			AddActorLocalRotation((FRotator(0.0f, -(-90 - degree), 0.0f)));
 			//SetActorRotation((FRotator(0.0f, -(-90 - degree), 0.0f)));
 
@@ -137,12 +138,9 @@ void AUser_Character::NotifyActorBeginOverlap(AActor* Other)
 	{
 		User_Character_AnimInstance->StopAllMontages(0.35f);
 	}
-	//		GetCharacterMovement()->GravityScale = 0.5f;
 	if (Other->ActorHasTag("Wall") && GetCharacterMovement()->IsFalling()) // Wall Launch Details
 	{
-		GetCharacterMovement()->GravityScale = 0.5f;
-		GetCharacterMovement()->StopMovementImmediately();
-		LaunchCharacter((GetActorForwardVector() + FVector(0.0f, 0.0f, 0.2f)) * 500.0f, false, false);
+		GetCharacterMovement()->GravityScale = 0.75f;
 
 	}
 }
@@ -153,7 +151,6 @@ void AUser_Character::NotifyActorEndOverlap(AActor* Other)
 	if (Other->ActorHasTag(TEXT("Wall")))
 	{
 		WallTouch = false;
-		WallRun_Now = false;
 		UE_LOG(LogTemp, Warning, TEXT("Wall Touch : False"));
 		User_Character_AnimInstance->StopWallRun_Montage();
 		GetCharacterMovement()->GravityScale = 1.0f;
@@ -171,7 +168,8 @@ void AUser_Character::NotifyHit
 	const FHitResult& Hit
 )
 {
-	//UE_LOG(LogTemp, Error, TEXT("Notify Hit Location : %s"), *(HitLocation-GetActorLocation()).ToString());
+	UE_LOG(LogTemp, Error, TEXT("Notify_Hit_Actor : %s"),*Other->GetName());
+	UE_LOG(LogTemp, Error, TEXT("Notify Hit Location : %s"), *(HitLocation-GetActorLocation()).ToString());
 	float degree = Cal_Forward_Target_Degree(HitLocation);
 	if (Other->ActorHasTag(TEXT("Wall")) && GetCharacterMovement()->IsFalling() &&WallTouch == false)
 	{	
@@ -188,6 +186,9 @@ void AUser_Character::NotifyHit
 			}
 			UE_LOG(LogTemp, Error, TEXT("Wall On Right"));
 			User_Character_AnimInstance->PlayWallRun_R_Montage();
+			//LaunchCharacter((GetActorForwardVector() + FVector(0.0f, 0.0f, 0.2f)) * 500.0f, false, false);
+
+			WallDir = 1;
 			//SetActorRotation((FRotator(0.0f, -(90 - degree), 0.0f)));
 		}
 		else if (degree < -1.0f)
@@ -198,6 +199,8 @@ void AUser_Character::NotifyHit
 			}
 			UE_LOG(LogTemp, Error, TEXT("Wall On Left"));
 			User_Character_AnimInstance->PlayWallRun_L_Montage();
+
+			WallDir = -1;
 			//SetActorRotation((FRotator(0.0f, -(-90 - degree), 0.0f)));
 
 		}
@@ -205,6 +208,7 @@ void AUser_Character::NotifyHit
 	if (Other->ActorHasTag(TEXT("Floor")))
 	{
 		WallTouch = false;
+		WallDir = 0;
 	}
 }
 float AUser_Character::Cal_Forward_Target_Degree(FVector TargetLocation)

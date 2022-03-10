@@ -57,6 +57,8 @@ public:
 	UPROPERTY(VisibleAnywhere)
 		bool WallTouch;
 	UPROPERTY(VisibleAnywhere)
+		int WallDir;
+	UPROPERTY(VisibleAnywhere)
 		bool Air_Dash_Now;
 	UPROPERTY(VisibleAnywhere)
 		bool WallRun_Now;
