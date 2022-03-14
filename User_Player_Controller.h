@@ -30,6 +30,8 @@ public:
 	void User_Aiming_Press();
 	void User_Aiming_Release();
 	void User_Aiming_Function(float DeltaTime);
+	void User_Launch_Rope_Press();
+
 
 	UPROPERTY(VisibleAnywhere)
 		float PlayerSpeed;

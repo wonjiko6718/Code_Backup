@@ -43,6 +43,8 @@ void AUser_Player_Controller::SetupInputComponent() // SetupInput
 	InputComponent->BindAction(TEXT("Jump"), EInputEvent::IE_Pressed, this, &AUser_Player_Controller::User_Jump);
 	InputComponent->BindAction(TEXT("Aimming"), EInputEvent::IE_Pressed, this, &AUser_Player_Controller::User_Aiming_Press);
 	InputComponent->BindAction(TEXT("Aimming"), EInputEvent::IE_Released, this, &AUser_Player_Controller::User_Aiming_Release);
+	InputComponent->BindAction(TEXT("Launch_Rope"), EInputEvent::IE_Pressed, this, &AUser_Player_Controller::User_Launch_Rope_Press);
+
 
 
 }
@@ -113,4 +115,11 @@ void AUser_Player_Controller::User_Aiming_Function(float DeltaTime)
 		User_Pawn_Character->SpringArm->TargetArmLength = FMath::FInterpTo(User_Pawn_Character->SpringArm->TargetArmLength, 400.0f, DeltaTime, 5.0f);
 		User_Pawn_Character->Camera->SetRelativeLocation(FMath::VInterpTo(User_Pawn_Character->Camera->GetRelativeLocation(), FVector(0.0f, 0.0f, 0.0f), DeltaTime, 10.0f));
 	}
+}
+void AUser_Player_Controller::User_Launch_Rope_Press()
+{
+	// Call Method Link
+	User_Pawn_Character->Shoot_Rope();
+	UE_LOG(LogTemp, Error, TEXT("User_Shoot_Activated"));
+
 }

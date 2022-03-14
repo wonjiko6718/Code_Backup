@@ -5,6 +5,7 @@
 #include "User_Character_AnimInstance.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "DrawDebugHelpers.h"
+#include "User_Rope_Hook.h"
 // Sets default values
 AUser_Character::AUser_Character()
 {
@@ -33,7 +34,6 @@ AUser_Character::AUser_Character()
 	GetCharacterMovement()->JumpZVelocity = 800.0f;
 	// Capsules Setting
 	GetCapsuleComponent()->SetCapsuleSize(30.0f, 90.0f);
-	GetCapsuleComponent()->OnComponentHit.AddDynamic(this, &AUser_Character::OnHit);
 
 	User_Detect_Capsule->SetCapsuleHalfHeight(95.0f);
 	User_Detect_Capsule->SetCapsuleRadius(35.0f);
@@ -233,21 +233,19 @@ float AUser_Character::Cal_Forward_Target_Degree(FVector TargetLocation)
 }
 // User Another Function
 
-void AUser_Character::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
+void AUser_Character::Shoot_Rope() //Spawn Rope Hook, Launch
 {
-	/*
-	if (OtherActor->ActorHasTag("Floor"))
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Actor Hit Acting : %s"), *OtherActor->GetName());
-		WallTouch = false;
-		this->SetActorRotation(FRotator(0.0f, 0.0f, 0.0f));
-
-	}
-	if (OtherActor->ActorHasTag("Wall") && WallTouch == false)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Actor Hit Acting : %s"), *OtherActor->GetName());
-		WallTouch = true;
-		this->SetActorRotation(FRotator(0.0f, 0.0f, 30.0f));
-	}
-	*/
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.Owner = this;
+	FVector SpawnLocation = this->GetActorLocation() + GetActorForwardVector()*100.0f;
+	UE_LOG(LogTemp, Error, TEXT("User_Player_Pressed_Character_Method"));
+	SetActorRotation(FRotator(0.0f, GetControlRotation().Yaw,0.0f));
+	AUser_Rope_Hook* Rope_Hook = GetWorld()->SpawnActor<AUser_Rope_Hook>(AUser_Rope_Hook::StaticClass() , SpawnLocation, GetControlRotation(), SpawnParams);
+}
+void AUser_Character::Rope_Launch(FVector TargetLocation)
+{
+	GetCharacterMovement()->StopMovementImmediately();
+	FVector LaunchDir = TargetLocation - GetActorLocation();
+	LaunchDir.Normalize(); // Direction to Target
+	LaunchCharacter(LaunchDir * 1500.0f, false, false);
 }

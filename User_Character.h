@@ -63,11 +63,9 @@ public:
 	UPROPERTY(VisibleAnywhere)
 		bool WallRun_Now;
 
-	//Hit Method -> User Another Function
-	UFUNCTION()
-		void OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
-
-
+	//Add Another Function
+	void Shoot_Rope();
+	void Rope_Launch(FVector TargetLocation);
 private:
 	float Cal_Forward_Target_Degree(FVector TargetLocation);
 
