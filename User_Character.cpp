@@ -46,6 +46,7 @@ AUser_Character::AUser_Character()
 	WallTouch = false;
 	Air_Dash_Now = false;
 	WallRun_Now = false;
+	Can_Rope_Action = true;
 	//Set Design of Character
 	/// File : Game/GhostLady_S4/Meshes/Characters/Combines/SK_GLS4_B.SK_GLS4_B
 	static ConstructorHelpers::FObjectFinder<USkeletalMesh> User_Character_SkelMesh_OF(TEXT("/Game/GhostLady_S4/Meshes/Characters/Combines/SK_GLS4_B.SK_GLS4_B"));
@@ -235,12 +236,16 @@ float AUser_Character::Cal_Forward_Target_Degree(FVector TargetLocation)
 
 void AUser_Character::Shoot_Rope() //Spawn Rope Hook, Launch
 {
-	FActorSpawnParameters SpawnParams;
-	SpawnParams.Owner = this;
-	FVector SpawnLocation = this->GetActorLocation() + GetActorForwardVector()*100.0f;
-	UE_LOG(LogTemp, Error, TEXT("User_Player_Pressed_Character_Method"));
-	SetActorRotation(FRotator(0.0f, GetControlRotation().Yaw,0.0f));
-	AUser_Rope_Hook* Rope_Hook = GetWorld()->SpawnActor<AUser_Rope_Hook>(AUser_Rope_Hook::StaticClass() , SpawnLocation, GetControlRotation(), SpawnParams);
+	if (Can_Rope_Action)
+	{
+		FActorSpawnParameters SpawnParams;
+		SpawnParams.Owner = this;
+		FVector SpawnLocation = this->GetActorLocation() + GetActorForwardVector() * 100.0f;
+		UE_LOG(LogTemp, Error, TEXT("User_Player_Pressed_Character_Method"));
+		SetActorRotation(FRotator(0.0f, GetControlRotation().Yaw, 0.0f));
+		AUser_Rope_Hook* Rope_Hook = GetWorld()->SpawnActor<AUser_Rope_Hook>(AUser_Rope_Hook::StaticClass(), SpawnLocation, GetControlRotation(), SpawnParams);
+		Can_Rope_Action = false;
+	}
 }
 void AUser_Character::Rope_Launch(FVector TargetLocation)
 {

@@ -23,7 +23,7 @@ AUser_Rope_Hook::AUser_Rope_Hook()
 	ProjectileMovement->bRotationFollowsVelocity = true;
 	ProjectileMovement->bShouldBounce = false;
 
-	InitialLifeSpan = 2.0f;
+	InitialLifeSpan = 1.6f;
 	User_Rope_Hook_StaticMeshComp->BodyInstance.SetCollisionProfileName(TEXT("Rope_Hook"));
 	User_Rope_Hook_StaticMeshComp->CanCharacterStepUpOn = ECB_No;
 	User_Rope_Hook_StaticMeshComp->SetEnableGravity(false);
@@ -63,12 +63,19 @@ void AUser_Rope_Hook::Tick(float DeltaTime)
 	if (GetOwner() != NULL)
 	{
 		GetDistanceTo(Rope_Hook_Owner);
-		UE_LOG(LogTemp, Error, TEXT("Get Owner to Distance: %f"),GetDistanceTo(Rope_Hook_Owner));
-		UE_LOG(LogTemp, Error, TEXT("Get Owner Location: %s"), *GetOwner()->GetActorLocation().ToString());
+		//UE_LOG(LogTemp, Error, TEXT("Get Owner to Distance: %f"),GetDistanceTo(Rope_Hook_Owner));
+		//UE_LOG(LogTemp, Error, TEXT("Get Owner Location: %s"), *GetOwner()->GetActorLocation().ToString());
 
 		if (GetDistanceTo(Rope_Hook_Owner) >= 2000.0f)
 		{
 			ProjectileMovement->Velocity = FVector(GetOwner()->GetActorLocation() - GetActorLocation());
+		}
+		if (GetLifeSpan() <= 0.02f)
+		{
+			AUser_Character* Owner_User;
+			Owner_User = Cast<AUser_Character>(GetOwner());
+			UE_LOG(LogTemp, Error, TEXT("GetLifeSpan On"));
+			Owner_User->Can_Rope_Action = true;
 		}
 	}
 }

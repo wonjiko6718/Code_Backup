@@ -62,6 +62,8 @@ public:
 		bool Air_Dash_Now;
 	UPROPERTY(VisibleAnywhere)
 		bool WallRun_Now;
+	UPROPERTY(VisibleAnywhere)
+		bool Can_Rope_Action;
 
 	//Add Another Function
 	void Shoot_Rope();
