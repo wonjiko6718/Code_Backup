@@ -5,7 +5,10 @@
 #include "User_Character_AnimInstance.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "DrawDebugHelpers.h"
+#include "Code_SampleGameMode.h"
 #include "User_Rope_Hook.h"
+#include "Spawned_Projectile_Actor.h"
+#include "Spawned_Trigger_Actor.h"
 // Sets default values
 AUser_Character::AUser_Character()
 {
@@ -15,10 +18,16 @@ AUser_Character::AUser_Character()
 	SpringArm = CreateDefaultSubobject <USpringArmComponent>(TEXT("SPRINGARM"));
 	Camera = CreateDefaultSubobject <UCameraComponent>(TEXT("Camera"));
 	User_Detect_Capsule = CreateDefaultSubobject <UCapsuleComponent>(TEXT("USER_DETECT_CAPSULE"));
+	Weapon = CreateDefaultSubobject<UStaticMesh>(TEXT("WEAPON_MESH"));
+	Half_Weapon = CreateDefaultSubobject<UStaticMesh>(TEXT("HALF_WEAPON_MESH"));
+	In_Socket_Weapon = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("IN_SOCKET_WEAPON"));
+	Re_Armed_Particle = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("RE_ARMED_PARTICLE"));
+
 
 	SpringArm->SetupAttachment(GetCapsuleComponent());
 	User_Detect_Capsule->SetupAttachment(GetCapsuleComponent());
 	Camera->SetupAttachment(SpringArm);
+	Re_Armed_Particle->SetupAttachment(In_Socket_Weapon);
 
 	SpringArm->TargetArmLength = 400.0f;
 	SpringArm->SetRelativeRotation(FRotator::ZeroRotator);
@@ -28,7 +37,7 @@ AUser_Character::AUser_Character()
 	SpringArm->bInheritYaw = true;
 	SpringArm->bDoCollisionTest = true;
 	this->bUseControllerRotationYaw = false;
-
+	this->Tags.Add(TEXT("User_Character"));
 	GetCharacterMovement()->bOrientRotationToMovement = true;
 	GetCharacterMovement()->RotationRate = FRotator(0.0f, 900.0f, 0.0f);
 	GetCharacterMovement()->JumpZVelocity = 800.0f;
@@ -41,25 +50,64 @@ AUser_Character::AUser_Character()
 	GetMesh()->SetRelativeLocation(FVector(0.0f, 0.0f, -90.0f));
 	GetMesh()->SetRelativeRotation(FRotator(0.0f, -90.0f, 0.0f));
 
+	Re_Armed_Particle->SetRelativeScale3D(FVector(0.2f));
+	Re_Armed_Particle->SetRelativeRotation(FRotator(0.0f, 0.0f, -110.0f));
+
+	FName Weapon_Socket_Name (TEXT("Sword_Socket"));
 	//User Normal Var
 	PlayerSpeed = 1.0f;
 	WallTouch = false;
 	Air_Dash_Now = false;
 	WallRun_Now = false;
 	Can_Rope_Action = true;
+	Player_Dead_Cause = "None_Dead";
 	//Set Design of Character
-	/// File : Game/GhostLady_S4/Meshes/Characters/Combines/SK_GLS4_B.SK_GLS4_B
-	static ConstructorHelpers::FObjectFinder<USkeletalMesh> User_Character_SkelMesh_OF(TEXT("/Game/GhostLady_S4/Meshes/Characters/Combines/SK_GLS4_B.SK_GLS4_B"));
+	// File : Game/GhostLady_S4/Meshes/Characters/Combines/SK_GLS4_B.SK_GLS4_B
+	// File : SkeletalMesh'/Game/Import_SH/Character/0316/21.21'
+	// File : SkeletalMesh'/Game/Import_SH/Character/0328/Mesh/Main_Character_Male_0328.Main_Character_Male_0328'
+	// File : SkeletalMesh'/Game/Import_SH/Character/0517/Male_Char.Male_Char'
+	// File : SkeletalMesh'/Game/Import_SH/Character/0603/220603_Male.220603_Male'
+	static ConstructorHelpers::FObjectFinder<USkeletalMesh> User_Character_SkelMesh_OF(TEXT("/Game/Import_SH/Character/0603/220603_Male.220603_Male"));
 	if (User_Character_SkelMesh_OF.Succeeded())
 	{
 		GetMesh()->SetSkeletalMesh(User_Character_SkelMesh_OF.Object);
 	}
 	// File : AnimBlueprint'/Game/Self_Anim_BP/User_Anim_BP.User_Anim_BP'
-	static ConstructorHelpers::FClassFinder<UAnimInstance> User_Character_AnimInstance_OF(TEXT("/Game/Self_Anim_BP/User_Anim_BP.User_Anim_BP_C"));
+	// File : AnimBlueprint'/Game/Retarget_Anim/Main_Char_Retarget/User_Anim_BP.User_Anim_BP'
+	// File : AnimBlueprint'/Game/Import_SH/Character/0328/Anim_Retarget/User_Anim_BP.User_Anim_BP'
+	// File : AnimBlueprint'/Game/Retarget_Anim/Main_Char_Retarget_Fixed/User_Anim_BP.User_Anim_BP'
+	// File : AnimBlueprint'/Game/Retarget_Anim/Main_Char_Retarget_0603/User_Anim_BP.User_Anim_BP'
+	static ConstructorHelpers::FClassFinder<UAnimInstance> User_Character_AnimInstance_OF(TEXT("/Game/Retarget_Anim/Main_Char_Retarget_0603/User_Anim_BP.User_Anim_BP_C"));
 	if (User_Character_AnimInstance_OF.Succeeded())
 	{
 		GetMesh()->SetAnimInstanceClass(User_Character_AnimInstance_OF.Class);
 	}
+	//StaticMesh'/Game/Import_SH/Mesh/Hair_Sword/5_Sword_part3.5_Sword_part3'
+	//StaticMesh'/Game/Import_SH/Mesh/Hair_Sword/6_Sword_part1.6_Sword_part1'
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> Half_Weapon_OF(TEXT("/Game/Import_SH/Mesh/Hair_Sword/6_Sword_part1.6_Sword_part1"));
+	if (Half_Weapon_OF.Succeeded())
+	{
+		Half_Weapon = Half_Weapon_OF.Object;
+	}
+	//StaticMesh'/Game/Import_SH/Mesh/Hair_Sword/6-1.6-1'
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> Cons_Weapon(TEXT("/Game/Import_SH/Mesh/Hair_Sword/6-1.6-1"));
+	if (Cons_Weapon.Succeeded())
+	{
+		Weapon = Cons_Weapon.Object;
+	}
+	if (GetMesh()->DoesSocketExist(Weapon_Socket_Name))
+	{
+		In_Socket_Weapon->SetStaticMesh(Weapon);
+		In_Socket_Weapon->SetupAttachment(GetMesh(), Weapon_Socket_Name);
+	}
+	//ParticleSystem'/Game/AdvancedMagicFX13/Particles/P_ky_burst.P_ky_burst'
+	static ConstructorHelpers::FObjectFinder<UParticleSystem> Re_Armed_Particle_OF(TEXT("/Game/AdvancedMagicFX13/Particles/P_ky_burst.P_ky_burst"));
+	if (Re_Armed_Particle_OF.Succeeded())
+	{
+		Re_Armed_Particle->SetTemplate(Re_Armed_Particle_OF.Object);
+		Re_Armed_Particle->SetAutoActivate(false);
+	}
+
 }
 
 // Called when the game starts or when spawned
@@ -74,22 +122,35 @@ void AUser_Character::PostInitializeComponents()
 void AUser_Character::BeginPlay()
 {
 	Super::BeginPlay();
-
-	
 }
 
 // Called every frame
 void AUser_Character::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
-	if (GetCharacterMovement()->IsFalling())
+	if (Player_Dead_Cause == "None_Dead")
 	{
-		GetController()->SetIgnoreMoveInput(true);
+		/*
+		if (GetCharacterMovement()->IsFalling())
+		{
+			GetController()->SetIgnoreMoveInput(true);
+		}
+		else
+		{
+			GetController()->ResetIgnoreMoveInput();
+		}
+		*/
 	}
 	else
 	{
-		GetController()->ResetIgnoreMoveInput();
+		GetController()->SetIgnoreMoveInput(true);
+		GetController()->SetIgnoreLookInput(true);
+		GetCharacterMovement()->StopMovementImmediately();
+		/*
+		FRotator CamRot = UKismetMathLibrary::FindLookAtRotation(Camera->GetRelativeLocation(), GetMesh()->GetRelativeLocation());
+		CamRot = FRotator(CamRot.Pitch, CamRot.Yaw, 0.0f);
+		Camera->SetRelativeRotation(CamRot);
+		*/
 	}
 	//TraceCode
 	FHitResult OutHit;
@@ -125,12 +186,18 @@ void AUser_Character::Tick(float DeltaTime)
 			//SetActorRotation((FRotator(0.0f, -(-90 - degree), 0.0f)));
 
 		}
-
 	}
+	if (OutHit.bBlockingHit)
+	{
+		//UE_LOG(LogTemp, Warning, TEXT("Lay_Trace:HittingActor Location : %s"),*OutHit.Actor->GetName());
+	}
+
 }
 void AUser_Character::End_Montage_Trail(UAnimMontage* Montage, bool bInterrupted)
 {
-	UE_LOG(LogTemp, Error, TEXT("Trail Montage is Ended"));
+	UE_LOG(LogTemp, Error, TEXT("Montage is Ended"));
+	GetController()->ResetIgnoreMoveInput();
+
 }
 void AUser_Character::NotifyActorBeginOverlap(AActor* Other)
 {
@@ -169,8 +236,8 @@ void AUser_Character::NotifyHit
 	const FHitResult& Hit
 )
 {
-	UE_LOG(LogTemp, Error, TEXT("Notify_Hit_Actor : %s"),*Other->GetName());
-	UE_LOG(LogTemp, Error, TEXT("Notify Hit Location : %s"), *(HitLocation-GetActorLocation()).ToString());
+	//UE_LOG(LogTemp, Error, TEXT("Notify_Hit_Actor : %s"),*Other->GetName());
+	//UE_LOG(LogTemp, Error, TEXT("Notify Hit Location : %s"), *(HitLocation-GetActorLocation()).ToString());
 	float degree = Cal_Forward_Target_Degree(HitLocation);
 	if (Other->ActorHasTag(TEXT("Wall")) && GetCharacterMovement()->IsFalling() &&WallTouch == false)
 	{	
@@ -211,6 +278,25 @@ void AUser_Character::NotifyHit
 		WallTouch = false;
 		WallDir = 0;
 	}
+	if (Other->ActorHasTag(TEXT("Obstacle")))
+	{
+		//LaunchCharacter(FVector(GetActorLocation() - Other->GetActorLocation().Normalize() * 1000.0f),false,false);
+		if (Other->IsA<ASpawned_Trigger_Actor>())
+		{
+			UE_LOG(LogTemp, Error, TEXT("Detect Obstacle"));
+			ASpawned_Trigger_Actor* Player_Obstacle_Actor = Cast<ASpawned_Trigger_Actor>(Other);
+			Player_Dead_Cause = Player_Obstacle_Actor->Obstacle_String;
+			User_Die();
+
+		}
+		if (Other->IsA<ASpawned_Projectile_Actor>())
+		{
+			UE_LOG(LogTemp, Error, TEXT("Detect Obstacle"));
+			ASpawned_Projectile_Actor* Player_Obstacle_Actor = Cast<ASpawned_Projectile_Actor>(Other);
+			Player_Dead_Cause = Player_Obstacle_Actor->Spawned_Projectile_String;
+			User_Die();
+		}
+	}
 }
 float AUser_Character::Cal_Forward_Target_Degree(FVector TargetLocation)
 {
@@ -234,7 +320,18 @@ float AUser_Character::Cal_Forward_Target_Degree(FVector TargetLocation)
 }
 // User Another Function
 
-void AUser_Character::Shoot_Rope() //Spawn Rope Hook, Launch
+void AUser_Character::Character_Play_RopeAction() // Play AnimMontage and Check Notify
+{
+	if (Can_Rope_Action)
+	{
+		SetActorRotation(FRotator(0.0f, GetControlRotation().Yaw, 0.0f));
+		User_Character_AnimInstance->PlayRopeAction_Montage();
+		UE_LOG(LogTemp, Error, TEXT("Character_Play_RopeAction"));
+		GetController()->SetIgnoreMoveInput(true);
+	}
+}
+
+void AUser_Character::Shoot_Rope() //Spawn Rope Hook, Launch When Montage Notify Activated
 {
 	if (Can_Rope_Action)
 	{
@@ -242,9 +339,10 @@ void AUser_Character::Shoot_Rope() //Spawn Rope Hook, Launch
 		SpawnParams.Owner = this;
 		FVector SpawnLocation = this->GetActorLocation() + GetActorForwardVector() * 100.0f;
 		UE_LOG(LogTemp, Error, TEXT("User_Player_Pressed_Character_Method"));
-		SetActorRotation(FRotator(0.0f, GetControlRotation().Yaw, 0.0f));
 		AUser_Rope_Hook* Rope_Hook = GetWorld()->SpawnActor<AUser_Rope_Hook>(AUser_Rope_Hook::StaticClass(), SpawnLocation, GetControlRotation(), SpawnParams);
 		Can_Rope_Action = false;
+		In_Socket_Weapon->SetStaticMesh(Half_Weapon);
+		//StaticMesh'/Game/Import_SH/Mesh/Hair_Sword/5_Sword_part3.5_Sword_part3'
 	}
 }
 void AUser_Character::Rope_Launch(FVector TargetLocation)
@@ -253,4 +351,26 @@ void AUser_Character::Rope_Launch(FVector TargetLocation)
 	FVector LaunchDir = TargetLocation - GetActorLocation();
 	LaunchDir.Normalize(); // Direction to Target
 	LaunchCharacter(LaunchDir * 1500.0f, false, false);
+}
+void AUser_Character::User_Stop_All_Montage()
+{
+	User_Character_AnimInstance->StopAllMontages(0.35f);
+}
+void AUser_Character::User_Die()
+{
+	UE_LOG(LogTemp, Error, TEXT("User_Player_IsDead"));
+	GetCharacterMovement()->StopMovementImmediately();
+	ACode_SampleGameMode* Character_Get_Gamemode = (ACode_SampleGameMode*)GetWorld()->GetAuthGameMode();
+	Character_Get_Gamemode->Player_Dead_Cause = Player_Dead_Cause;
+	//GetCapsuleComponent()->SetMobility(EComponentMobility::Static);
+	GetCapsuleComponent()->SetCollisionProfileName(TEXT("OverlapAllDynamic"));
+	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Flying);
+	GetCharacterMovement()->StopMovementImmediately();
+
+
+	User_Character_AnimInstance->StopAllMontages(0.1f);
+	GetMesh()->SetSimulatePhysics(true);
+	GetMesh()->SetCollisionProfileName(TEXT("BlockAll"));
+	GetWorldSettings()->SetTimeDilation(0.3f);
+	Character_Get_Gamemode->GameMode_GameOver();
 }

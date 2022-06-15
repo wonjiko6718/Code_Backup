@@ -2,12 +2,13 @@
 
 #pragma once
 
-#include "CoreMinimal.h"
+#include "EngineMinimal.h"
 #include "GameFramework/Actor.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Engine/Classes/Components/SphereComponent.h"
+#include "CableComponent.h"
+#include "Scene_Actor_Base.h"
 #include "User_Rope_Hook.generated.h"
-
 UCLASS()
 class CODE_SAMPLE_API AUser_Rope_Hook : public AActor
 {
@@ -47,4 +48,16 @@ public:
 		AActor* Rope_Hook_Owner;
 	UPROPERTY(VisibleAnywhere)
 		bool Rope_Hook_Return;
+	UPROPERTY(VisibleAnywhere)
+		UCableComponent* Rope_Hook_CableComp;
+	UPROPERTY(VisibleAnywhere)
+		UParticleSystemComponent* Rope_On_Particle;
+	UPROPERTY(VisibleAnywhere)
+		UParticleSystemComponent* Rope_Fail_Particle;
+	UPROPERTY(VisibleAnywhere)
+		UParticleSystemComponent* Rope_Air_Particle;
+	UPROPERTY(VisibleAnywhere)
+		USoundBase* Rope_Hit_Sound;
+	UPROPERTY(VisibleAnywhere)
+		USoundAttenuation* Rope_SoundAttenuation_Setting;
 };

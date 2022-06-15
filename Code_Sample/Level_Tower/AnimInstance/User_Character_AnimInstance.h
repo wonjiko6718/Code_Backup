@@ -4,6 +4,7 @@
 
 #include "EngineMinimal.h"
 #include "Animation/AnimInstance.h"
+#include "User_Character_AnimInstance_Base.h"
 #include "User_Character_AnimInstance.generated.h"
 
 /**
@@ -24,6 +25,7 @@ public:
 	void PlayWallRun_R_Montage();
 	void PlayWallRun_L_Montage();
 	void StopWallRun_Montage();
+	void PlayRopeAction_Montage();
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Meta = (AllowPrivateAccess = true))
 		float CurrentPawnSpeed;
@@ -35,4 +37,9 @@ public:
 		UAnimMontage* AirDash_Montage;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Meta = (AllowPrivateAccess = true))
 		UAnimMontage* WallRun_Montage;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Meta = (AllowPrivateAccess = true))
+		UAnimMontage* RopeAction_Montage;
+
+	UFUNCTION()
+		void AnimNotify_Spawn_Projectile();
 };

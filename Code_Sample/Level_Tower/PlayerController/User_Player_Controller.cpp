@@ -27,6 +27,11 @@ void AUser_Player_Controller::BeginPlay() // BeginPlay
 		SetInputMode(FInputModeUIOnly());
 		bShowMouseCursor = true;
 	}
+	else
+	{
+		SetInputMode(FInputModeGameOnly());
+		bShowMouseCursor = false;
+	}
 }
 void AUser_Player_Controller::Tick(float DeltaTime)
 {
@@ -44,6 +49,8 @@ void AUser_Player_Controller::SetupInputComponent() // SetupInput
 	InputComponent->BindAction(TEXT("Aimming"), EInputEvent::IE_Pressed, this, &AUser_Player_Controller::User_Aiming_Press);
 	InputComponent->BindAction(TEXT("Aimming"), EInputEvent::IE_Released, this, &AUser_Player_Controller::User_Aiming_Release);
 	InputComponent->BindAction(TEXT("Launch_Rope"), EInputEvent::IE_Pressed, this, &AUser_Player_Controller::User_Launch_Rope_Press);
+	InputComponent->BindAction(TEXT("Restart"), EInputEvent::IE_Pressed, this, &AUser_Player_Controller::User_Restart);
+
 
 
 
@@ -81,6 +88,7 @@ void AUser_Player_Controller::User_Jump()
 	{
 		User_Pawn_Character->LaunchCharacter(GetPawn()->GetActorRightVector() * -500.0f + FVector(0.0f,0.0f,800.0f), false, false);
 		User_Pawn_Character->AddActorLocalRotation(FRotator(0.0f, -75.0f, 0.0f));
+		UE_LOG(LogTemp, Error, TEXT("Wall_Jump_On"));
 	}
 	if (User_Pawn_Character->WallDir == -1 && User_Pawn_Character->WallTouch == true) // Left Wall Dir Jump
 	{
@@ -88,11 +96,6 @@ void AUser_Player_Controller::User_Jump()
 		User_Pawn_Character->AddActorLocalRotation(FRotator(0.0f, 75.0f, 0.0f));
 
 	}
-	if (User_Pawn_Character->GetCharacterMovement()->IsFalling() == true && User_Pawn_Character->WallTouch == false)
-	{
-		User_Pawn_Character->LaunchCharacter(GetPawn()->GetActorUpVector() * -8000.0f,false,false);
-	}
-	
 }
 void AUser_Player_Controller::User_Aiming_Press()
 {
@@ -119,7 +122,12 @@ void AUser_Player_Controller::User_Aiming_Function(float DeltaTime)
 void AUser_Player_Controller::User_Launch_Rope_Press()
 {
 	// Call Method Link
-	User_Pawn_Character->Shoot_Rope();
+	User_Pawn_Character->Character_Play_RopeAction();
 	UE_LOG(LogTemp, Error, TEXT("User_Shoot_Activated"));
+
+}
+void AUser_Player_Controller::User_Restart()
+{
+	UGameplayStatics::OpenLevel(this, FName(*GetWorld()->GetName()), false);
 
 }

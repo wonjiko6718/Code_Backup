@@ -4,6 +4,7 @@
 
 #include "EngineMinimal.h"
 #include "GameFramework/Character.h"
+#include "User_Character_Base.h"
 #include "User_Character.generated.h"
 
 UCLASS()
@@ -64,13 +65,27 @@ public:
 		bool WallRun_Now;
 	UPROPERTY(VisibleAnywhere)
 		bool Can_Rope_Action;
+	UPROPERTY(VisibleAnywhere)
+		FString Player_Dead_Cause;
+	UPROPERTY(VisibleAnywhere)
+		UStaticMesh* Weapon;
+	UPROPERTY(VisibleAnywhere)
+		UStaticMesh* Half_Weapon;
+	UPROPERTY(VisibleAnywhere)
+		UStaticMeshComponent* In_Socket_Weapon;
+	UPROPERTY(VisibleAnywhere)
+		UParticleSystemComponent* Re_Armed_Particle;
 
 	//Add Another Function
 	void Shoot_Rope();
 	void Rope_Launch(FVector TargetLocation);
+	void Character_Play_RopeAction();
+	void User_Stop_All_Montage();
+	void User_Die();
 private:
 	float Cal_Forward_Target_Degree(FVector TargetLocation);
 
 	UFUNCTION()
 		void End_Montage_Trail(UAnimMontage* Montage, bool bInterrupted);
+
 };

@@ -5,6 +5,7 @@
 #include "EngineMinimal.h"
 #include "GameFramework/PlayerController.h"
 #include "User_Character.h"
+#include "User_Player_Controller_Base.h"
 #include "User_Player_Controller.generated.h"
 
 /**
@@ -31,6 +32,7 @@ public:
 	void User_Aiming_Release();
 	void User_Aiming_Function(float DeltaTime);
 	void User_Launch_Rope_Press();
+	void User_Restart();
 
 
 	UPROPERTY(VisibleAnywhere)
